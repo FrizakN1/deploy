@@ -1,0 +1,107 @@
+version: "3.9"
+
+services:
+  network-hub-service-frontend:
+    build:
+      context: ../network-hub-service/frontend
+    container_name: network-hub-service-frontend
+    depends_on:
+      - network-hub-service-backend
+    restart: always
+    volumes:
+      - ./network-hub-service/frontend/nginx.conf:/etc/nginx/conf.d/default.conf
+    networks:
+      - network-hub-service-frontend-network
+    ports:
+      - "80:80"
+    stdin_open: true
+    tty: true
+
+  network-hub-service-backend:
+    build:
+      context: ./network-hub-service/backend
+    container_name: network-hub-service-backend
+    depends_on:
+      - network-hub-service-db
+    restart: always
+    volumes:
+      - ./network-hub-service/backend/upload:/app/upload
+      - ./network-hub-service/backend/logs:/app/logs
+    environment:
+      APP_ADDRESS: 0.0.0.0
+      APP_PORT: 8080
+      DB_HOST: network-hub-service-db
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASS:
+      DB_NAME: network-hub-service
+      ALLOW_ORIGIN: http://network-hub-service-frontend
+      SUPER_ADMIN_PASSWORD: superadmin
+      SECRET_KEY: some-secret-key
+      USER_SERVICE_ADDRESS: user-service
+      USER_SERVICE_PORT: 50051
+    networks:
+      - network-hub-service-frontend-network
+      - network-hub-service-backend-network
+      - services-channel-network
+    ports:
+      - "8080:8080"
+
+  network-hub-service-db:
+    image: postgres:15
+    restart: always
+    volumes:
+      - network-hub-service-pgdata:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1234
+      POSTGRES_DB: network-hub-service
+    networks:
+      - network-hub-service-backend-network
+
+  user-service:
+    build:
+      context: ./user-service
+    container_name: user-service
+    depends_on:
+      - user-service-db
+    restart: always
+    volumes:
+      - ./user-service/logs:/app/logs
+    environment:
+      APP_NETWORK: tcp
+      APP_PORT: 50051
+      DB_HOST: user-service-db
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASS: 1234
+      DB_NAME: user-service
+      SUPER_ADMIN_PASSWORD: superadmin
+      SECRET_KEY: some-secret-key
+    networks:
+      - services-channel-network
+      - user-service-network
+    ports:
+      - "50051:50051"
+
+  user-service-db:
+    image: postgres:15
+    restart: always
+    volumes:
+      - user-service-pgdata:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1234
+      POSTGRES_DB: user-service
+    networks:
+      - user-service-network
+
+volumes:
+  network-hub-service-pgdata:
+  user-service-pgdata:
+
+networks:
+  network-hub-service-frontend-network:
+  network-hub-service-backend-network:
+  user-service-network:
+  services-channel-network:
