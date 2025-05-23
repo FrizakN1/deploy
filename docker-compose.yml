@@ -19,7 +19,7 @@ services:
 
   network-hub-service-backend:
     build:
-      context: ./network-hub-service/backend
+      context: ../network-hub-service/backend
     container_name: network-hub-service-backend
     depends_on:
       - network-hub-service-db
@@ -61,7 +61,7 @@ services:
 
   user-service:
     build:
-      context: ./user-service
+      context: ../user-service
     container_name: user-service
     depends_on:
       - user-service-db
