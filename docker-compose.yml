@@ -61,6 +61,7 @@ services:
       - services-channel-network
     ports:
       - "8080:8080"
+    command: ["./network-hub-service", "--migration=up"]
 
   network-hub-service-db:
     image: postgres:15
