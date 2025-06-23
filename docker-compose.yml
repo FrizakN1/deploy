@@ -54,6 +54,12 @@ services:
       SECRET_KEY: some-secret-key
       USER_SERVICE_ADDRESS: user-service
       USER_SERVICE_PORT: 50051
+      ADDRESS_SERVICE_ADDRESS: address-service
+      ADDRESS_SERVICE_PORT: 50052
+      SEARCH_SERVICE_ADDRESS: search-service
+      SEARCH_SERVICE_PORT: 50050
+      KAFKA_ADDRESS: kafka
+      KAFKA_PORT: 9092
     networks:
       - network-hub-service-frontend-network
       - network-hub-service-backend-network
