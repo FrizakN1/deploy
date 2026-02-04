@@ -166,7 +166,7 @@ services:
     container_name: search-service
     depends_on:
       elasticsearch:
-        condition: service_healthy
+        condition: service_completed_successfully
       user-service:
         condition: service_started
       kafka:
@@ -241,6 +241,24 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
+
+  elastic-init:
+    image: curlimages/curl:8.5.0
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    volumes:
+      - ./mapping.json:/mapping.json:ro
+    entrypoint: >
+      sh -c "
+      echo 'Waiting for ES...' &&
+      curl -X DELETE http://elasticsearch:9200/addresses || true &&
+      curl -X PUT http://elasticsearch:9200/addresses
+        -H 'Content-Type: application/json'
+        -d @/mapping.json
+      "
+    networks:
+      - es-network
 
 volumes:
   network-hub-service-pgdata:
