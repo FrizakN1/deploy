@@ -165,7 +165,7 @@ services:
     build: ../search-service
     container_name: search-service
     depends_on:
-      elasticsearch:
+      elastic-init:
         condition: service_completed_successfully
       user-service:
         condition: service_started
