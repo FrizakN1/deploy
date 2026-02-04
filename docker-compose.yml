@@ -244,19 +244,28 @@ services:
 
   elastic-init:
     image: curlimages/curl:8.5.0
+    container_name: elastic-init
     depends_on:
       elasticsearch:
         condition: service_healthy
     volumes:
       - ./mapping.json:/mapping.json:ro
-    entrypoint: >
-      sh -c "
-      echo 'Waiting for ES...' &&
-      curl -X DELETE http://elasticsearch:9200/addresses || true &&
-      curl -X PUT http://elasticsearch:9200/addresses
-        -H 'Content-Type: application/json'
-        -d @/mapping.json
-      "
+    command:
+      - sh
+      - -c
+      - |
+        echo "Waiting for Elasticsearch..."
+        curl -s http://elasticsearch:9200 >/dev/null
+        
+        echo "Deleting old index (if exists)..."
+        curl -X DELETE http://elasticsearch:9200/addresses || true
+        
+        echo "Creating index with mapping..."
+        curl -X PUT http://elasticsearch:9200/addresses \
+          -H "Content-Type: application/json" \
+          --data-binary @/mapping.json
+        
+        echo "Elasticsearch index ready"
     networks:
       - es-network
 
